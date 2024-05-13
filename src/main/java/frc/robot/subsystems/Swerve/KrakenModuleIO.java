@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.Swerve;
 
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -18,10 +17,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.SwerveModuleConstants;
-import frc.lib.math.Conversions;
 
 public class KrakenModuleIO implements ModuleIO {
   /** Creates a new SwerveModule. */
@@ -37,11 +33,6 @@ public class KrakenModuleIO implements ModuleIO {
   private DutyCycleOut driveDutyCycle;
 
   private SwerveModuleState previousState = new SwerveModuleState();
-  private SwerveModuleState targetState = new SwerveModuleState();
-
-  private double characterizationVolts = 0.0;
-
-  private boolean characterizing = false;
 
   private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(SwerveModuleConstants.kS, SwerveModuleConstants.kV, SwerveModuleConstants.kA);
 
@@ -76,10 +67,18 @@ public class KrakenModuleIO implements ModuleIO {
     talonConfigs.Slot0 = slot0;
 
     talonConfigs.TorqueCurrent.PeakReverseTorqueCurrent = SwerveModuleConstants.maxCurrent;
-    talonConfigs.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveModuleConstants.maxCurrent;\
+    talonConfigs.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveModuleConstants.maxCurrent;
 
     driveMotor.getConfigurator().apply(talonConfigs);
     turnMotor.getConfigurator().apply(talonConfigs);
+  }
+
+  public double RPStoMPS(double rps) {
+    return rps*(SwerveModuleConstants.WHEEL_CIRCUMFERENCE/(2*3.14));
+  }
+
+  public double MPStoRPS(double mps) {
+    return mps/(SwerveModuleConstants.WHEEL_CIRCUMFERENCE/(2*3.14));
   }
 
   @Override
@@ -89,12 +88,12 @@ public class KrakenModuleIO implements ModuleIO {
 
   @Override
   public SwerveModuleState getModuleState() {
-    return new SwerveModuleState(Conversions.RPStoMPS(driveMotor.getVelocity().getValue()), Rotation2d.fromRadians(turnMotor.getPosition().getValue()));
+    return new SwerveModuleState(RPStoMPS(driveMotor.getVelocity().getValue()), Rotation2d.fromRadians(turnMotor.getPosition().getValue()));
   }
 
   @Override
   public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(Conversions.RPStoMPS(driveMotor.getVelocity().getValue()), Rotation2d.fromRadians(turnMotor.getPosition().getValue()));
+    return new SwerveModulePosition(RPStoMPS(driveMotor.getVelocity().getValue()), Rotation2d.fromRadians(turnMotor.getPosition().getValue()));
   }
 
   @Override
@@ -106,12 +105,12 @@ public class KrakenModuleIO implements ModuleIO {
   @Override
   public void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     double desiredSpeed = desiredState.speedMetersPerSecond;
-
+    
     if (isOpenLoop) {
       driveDutyCycle.Output = desiredSpeed / SwerveModuleConstants.maxSpeed;
       driveMotor.setControl(driveDutyCycle);
     } else {
-    desiredVelocity.Velocity = Conversions.MPStoRPS(desiredSpeed, SwerveModuleConstants.WHEEL_CIRCUMFERENCE);
+    desiredVelocity.Velocity = MPStoRPS(desiredSpeed);
     desiredVelocity.FeedForward = feedforward.calculate(desiredSpeed, (desiredSpeed - previousState.speedMetersPerSecond) / 0.02);
     driveMotor.setControl(desiredVelocity); 
     }

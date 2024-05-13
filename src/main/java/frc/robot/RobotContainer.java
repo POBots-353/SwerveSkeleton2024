@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.Swerve.SwerveDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -25,6 +26,7 @@ public class RobotContainer {
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
   
   private final SwerveDrive drive;
+  private final ExampleCommand exampleCommand = new ExampleCommand();
   
   public RobotContainer() {
     drive = SwerveDrive.create();
@@ -57,6 +59,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-   
+    return exampleCommand;
   }
 }

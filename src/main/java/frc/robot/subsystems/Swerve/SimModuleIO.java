@@ -4,18 +4,13 @@
 
 package frc.robot.subsystems.Swerve;
 
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.SwerveModuleConstants;
 
 public class SimModuleIO implements ModuleIO {
@@ -24,16 +19,14 @@ public class SimModuleIO implements ModuleIO {
   private DCMotorSim driveSim;
   private DCMotorSim turnSim;
 
-  private PositionVoltage anglePosition;
-
   private double driveVolts;
   private double turnVolts;
 
   private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(SwerveModuleConstants.kS, SwerveModuleConstants.kV, SwerveModuleConstants.kA);
 
   public SimModuleIO() {
-    driveSim = new DCMotorSim(DCMotor.getKrakenX60Foc(), 6.12, 0.025);
-    turnSim = new DCMotorSim(DCMotor.getKrakenX60Foc(), 150.0 / 7.0, 0.004);
+    driveSim = new DCMotorSim(DCMotor.getKrakenX60Foc(1), 6.12, 0.025);
+    turnSim = new DCMotorSim(DCMotor.getKrakenX60Foc(1), 150.0 / 7.0, 0.004);
   }
 
   @Override

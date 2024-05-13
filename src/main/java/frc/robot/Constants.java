@@ -17,13 +17,6 @@ import edu.wpi.first.math.util.Units;
  */
 public final class Constants {
 
-  public static final Mode currentMode = Mode.REAL;
-
-  public static enum Mode {
-    REAL,
-    SIM,
-    REPLAY
-  }
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }

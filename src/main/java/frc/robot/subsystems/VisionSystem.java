@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.photonvision.PhotonCamera;
@@ -38,10 +37,6 @@ public class VisionSystem extends SubsystemBase {
   public List<PhotonTrackedTarget> getTargets() {
     var latestResult = camera.getLatestResult();
     return latestResult.getTargets();
-  }
-
-  public getStandardDeviations() {
-    
   }
 
   @Override
