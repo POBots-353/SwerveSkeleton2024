@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -26,8 +27,8 @@ public final class Constants {
   }
 
   public static class SwerveDriveConstants {
-    public static final double TRACK_WIDTH = Units.inchesToMeters(24.0);
-    public static final double WHEEL_BASE = Units.inchesToMeters(24.0);
+    public static final double TRACK_WIDTH = Units.inchesToMeters(24.75);
+    public static final double WHEEL_BASE = Units.inchesToMeters(24.75);
 
     public static final Translation2d frontLeft =
         new Translation2d(WHEEL_BASE / 2, TRACK_WIDTH / 2);
@@ -41,14 +42,22 @@ public final class Constants {
     public static final Translation2d[] wheelLocations = {
       frontLeft, frontRight, backLeft, backRight
     };
+
+    public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(wheelLocations);
+
+    public static final double turnToAngleMaxVelocity = Units.degreesToRadians(180.0);
+
+    public static final double maxSpeed = Units.feetToMeters(8.5);
+    public static final double maxAngularSpeed = Units.degreesToRadians(180);
+    
+    public static final double maxTranslationalAcceleration = Units.feetToMeters(30.0);
+    public static final double maxAngularAcceleration = Units.degreesToRadians(360.0);
+    
+    public static final double maxTourqueCurrent = 0;
   }
 
   public static class SwerveModuleConstants {
     public static final double WHEEL_CIRCUMFERENCE = 2;
-
-    public static final double maxSpeed = 12;
-    
-    public static final double maxTourqueCurrent = 0;
 
     public static final double kV = 0;
     public static final double kS = 0;

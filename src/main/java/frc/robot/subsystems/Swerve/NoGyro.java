@@ -48,4 +48,9 @@ public class NoGyro implements GyroIO {
   public Rotation3d getHeading3d() {
     return new Rotation3d();
   }
+
+  @Override
+  public Rotation2d getRotation() {
+    return new Rotation2d();
+  }
 }

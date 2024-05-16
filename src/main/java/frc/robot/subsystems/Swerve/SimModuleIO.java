@@ -11,6 +11,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
 public class SimModuleIO implements ModuleIO {
@@ -59,7 +60,7 @@ public class SimModuleIO implements ModuleIO {
   public void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     double desiredVelocity = desiredState.speedMetersPerSecond;
     if (isOpenLoop) {
-      setDriveVoltage(desiredVelocity/SwerveModuleConstants.maxSpeed);
+      setDriveVoltage(desiredVelocity/SwerveDriveConstants.maxSpeed);
     } else {
       double driveFeedForward = feedforward.calculate(desiredVelocity);
       double pidOutput = (getModuleState().speedMetersPerSecond - desiredVelocity) * SwerveModuleConstants.kP;

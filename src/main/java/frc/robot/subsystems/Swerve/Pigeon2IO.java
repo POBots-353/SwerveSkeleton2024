@@ -66,4 +66,9 @@ public class Pigeon2IO implements GyroIO {
   public Rotation3d getHeading3d() {
     return pigeon.getRotation3d();
   }
+
+  @Override
+  public Rotation2d getRotation() {
+    return pigeon.getRotation2d();
+  }
 }

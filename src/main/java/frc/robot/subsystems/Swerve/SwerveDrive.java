@@ -4,12 +4,17 @@
 
 package frc.robot.subsystems.Swerve;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
 public class SwerveDrive extends SubsystemBase {
@@ -20,9 +25,12 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule backRight;
   private final SwerveModule backLeft;
 
+  private final SwerveDrivePoseEstimator poseEstimator;
+  private SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(SwerveDriveConstants.wheelLocations);
+
   private final Field2d field2d = new Field2d();
 
-  private Rotation2d angleOffset = Rotation2d.fromDegrees(0.0);
   private GyroIO gyro;
 
   public static SwerveDrive create() {
@@ -58,6 +66,28 @@ public class SwerveDrive extends SubsystemBase {
     this.frontLeft = new SwerveModule(frontLeft, "Front Left");
     this.backRight = new SwerveModule(backRight, "Back Right");
     this.backLeft = new SwerveModule(backLeft, "Back Left");
+
+    poseEstimator =
+    new SwerveDrivePoseEstimator(
+        kinematics,
+        getHeading(),
+        getModulePositions(),
+        new Pose2d(0.0, 0.0, getHeading()));
+  }
+
+  public void drive(
+    double forward,
+    double strafe,
+    double turn,
+    boolean isOpenLoop) {
+    ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(forward, -strafe, turn, getHeading());
+    setChassisSpeeds(chassisSpeeds, isOpenLoop);
+  }
+
+  public void setChassisSpeeds(ChassisSpeeds speeds, boolean isOpenLoop) {
+    speeds = ChassisSpeeds.discretize(speeds, 0.020);
+
+    setModuleStates(kinematics.toSwerveModuleStates(speeds), isOpenLoop);
   }
 
   public void setModuleStates(SwerveModuleState[] states, boolean isOpenLoop) {
@@ -96,8 +126,25 @@ public class SwerveDrive extends SubsystemBase {
     };
   }
 
+  public ChassisSpeeds getChassisSpeeds() {
+    return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  public Pose2d getPose() {
+    return poseEstimator.getEstimatedPosition();
+  }
+
+  public Rotation2d getYaw() {
+    return gyro.yawValue();
+  }
+
+  public Rotation2d getHeading() {
+    return gyro.getRotation();
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    
   }
 }

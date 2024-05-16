@@ -17,6 +17,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
 public class KrakenModuleIO implements ModuleIO {
@@ -28,8 +29,6 @@ public class KrakenModuleIO implements ModuleIO {
   private VelocityVoltage desiredVelocity;
   private PositionVoltage anglePosition;
 
-  private String moduleName;
-
   private DutyCycleOut driveDutyCycle;
 
   private SwerveModuleState previousState = new SwerveModuleState();
@@ -37,7 +36,6 @@ public class KrakenModuleIO implements ModuleIO {
   private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(SwerveModuleConstants.kS, SwerveModuleConstants.kV, SwerveModuleConstants.kA);
 
   public KrakenModuleIO(int driveMotorID, int turnMotorID, int canCoderID, String moduleName) {
-    this.moduleName = moduleName;
 
     driveMotor = new TalonFX(driveMotorID);
     turnMotor = new TalonFX(turnMotorID);
@@ -107,7 +105,7 @@ public class KrakenModuleIO implements ModuleIO {
     double desiredSpeed = desiredState.speedMetersPerSecond;
     
     if (isOpenLoop) {
-      driveDutyCycle.Output = desiredSpeed / SwerveModuleConstants.maxSpeed;
+      driveDutyCycle.Output = desiredSpeed / SwerveDriveConstants.maxSpeed;
       driveMotor.setControl(driveDutyCycle);
     } else {
     desiredVelocity.Velocity = MPStoRPS(desiredSpeed);

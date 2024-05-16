@@ -24,4 +24,6 @@ public interface GyroIO {
   StatusSignal<Double> getAccelerationZ();
 
   Rotation3d getHeading3d();
+
+  Rotation2d getRotation();
 }
