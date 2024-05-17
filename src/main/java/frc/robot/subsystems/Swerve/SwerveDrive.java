@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
+import frc.robot.subsystems.VisionSystem;
 
 public class SwerveDrive extends SubsystemBase {
   /** Creates a new SweveDrive. */
@@ -32,6 +33,8 @@ public class SwerveDrive extends SubsystemBase {
   private final Field2d field2d = new Field2d();
 
   private GyroIO gyro;
+
+  private VisionSystem vision;
 
   public static SwerveDrive create() {
     if (Robot.isReal()) {
@@ -73,6 +76,8 @@ public class SwerveDrive extends SubsystemBase {
         getHeading(),
         getModulePositions(),
         new Pose2d(0.0, 0.0, getHeading()));
+
+    vision = new VisionSystem();
   }
 
   public void drive(
@@ -142,9 +147,19 @@ public class SwerveDrive extends SubsystemBase {
     return gyro.getRotation();
   }
 
+  public void addVisionToPoseEstimate() {
+    if (!vision.hasTargets()) return;
+
+    poseEstimator.addVisionMeasurement(vision.getPose(), vision.getLatency());
+  }
+
+  public void updateOdometry() {
+    poseEstimator.update(getHeading(), getModulePositions());
+    addVisionToPoseEstimate();
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
   }
 }
