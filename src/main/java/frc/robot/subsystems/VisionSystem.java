@@ -5,10 +5,12 @@
 package frc.robot.subsystems;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -30,11 +32,12 @@ import frc.robot.Constants.VisionConstants;
 public class VisionSystem extends SubsystemBase {
   /** Creates a new Vision. */
   PhotonCamera camera;
-  PhotonPoseEstimator poseEstimator;
 
   AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
   Transform3d robotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0,0,0));
+
+  PhotonPoseEstimator poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.CLOSEST_TO_REFERENCE_POSE, camera, robotToCam);
 
   public VisionSystem() {
     camera = new PhotonCamera("Photon Camera");
@@ -54,7 +57,7 @@ public class VisionSystem extends SubsystemBase {
     return hasTargets;
   }
 
-  private Vector<N3> getArducamStandardDeviations(EstimatedRobotPose robotPose, double averageDistance, int tagCount) {
+  public Vector<N3> getStandardDeviations(EstimatedRobotPose robotPose, double averageDistance, int tagCount) {
     double stdDevScale = 1 + (averageDistance * averageDistance / 30);
 
     if (tagCount > 1) {
@@ -69,6 +72,36 @@ public class VisionSystem extends SubsystemBase {
     }
   }
 
+  public int getTagCount() {
+    int tagCount = 0;
+
+    Optional<EstimatedRobotPose> optionalVisionPose =
+        poseEstimator.update(getLatestResult());
+    
+    EstimatedRobotPose visionPose = optionalVisionPose.get();
+    
+    for (PhotonTrackedTarget target : visionPose.targetsUsed) {
+      tagCount++;
+    }
+
+    return tagCount;
+  }
+
+  public double getTagTotalDistance() {
+    double totalDistance = 0;
+
+    Optional<EstimatedRobotPose> optionalVisionPose =
+        poseEstimator.update(getLatestResult());
+    
+    EstimatedRobotPose visionPose = optionalVisionPose.get();
+    
+    for (PhotonTrackedTarget target : visionPose.targetsUsed) {
+      totalDistance += target.getBestCameraToTarget().getTranslation().toTranslation2d().getNorm();
+    }
+
+    return totalDistance;
+  }
+
   public Pose2d getPose() {
     PhotonTrackedTarget target = getLatestResult().getBestTarget();
 
@@ -76,6 +109,15 @@ public class VisionSystem extends SubsystemBase {
       target.getBestCameraToTarget(), aprilTagFieldLayout.getTagPose(target.getFiducialId()).get(), robotToCam);
 
     return robotPose.toPose2d();
+  }
+
+  public EstimatedRobotPose getPoseFromVisionPoseEstimator() {
+    Optional<EstimatedRobotPose> optionalVisionPose =
+        poseEstimator.update(getLatestResult());
+    
+    EstimatedRobotPose estimatedRobotPose = optionalVisionPose.get();
+
+    return estimatedRobotPose;
   }
 
   public double getLatency() {

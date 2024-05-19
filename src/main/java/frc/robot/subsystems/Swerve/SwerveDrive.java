@@ -11,7 +11,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.SwerveDriveConstants;
@@ -29,8 +28,6 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveDrivePoseEstimator poseEstimator;
   private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(SwerveDriveConstants.wheelLocations);
-
-  private final Field2d field2d = new Field2d();
 
   private GyroIO gyro;
 
@@ -150,7 +147,9 @@ public class SwerveDrive extends SubsystemBase {
   public void addVisionToPoseEstimate() {
     if (!vision.hasTargets()) return;
 
-    poseEstimator.addVisionMeasurement(vision.getPose(), vision.getLatency());
+    poseEstimator.addVisionMeasurement(vision.getPose(), vision.getLatency(), 
+    vision.getStandardDeviations(vision.getPoseFromVisionPoseEstimator(), vision.getTagTotalDistance(), 
+    vision.getTagCount()));
   }
 
   public void updateOdometry() {

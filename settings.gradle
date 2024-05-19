@@ -23,6 +23,9 @@ pluginManagement {
             name 'frcHome'
             url frcHomeMaven
         }
+        flatDir {
+           dirs("libs")
+        }
     }
 }
 
