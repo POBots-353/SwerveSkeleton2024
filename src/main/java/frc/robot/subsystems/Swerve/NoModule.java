@@ -13,9 +13,6 @@ public class NoModule implements ModuleIO {
   public NoModule() {}
 
   @Override
-  public void setDriveVoltage(double voltage) {}
-
-  @Override
   public SwerveModulePosition getModulePosition() {
     return new SwerveModulePosition();
   }

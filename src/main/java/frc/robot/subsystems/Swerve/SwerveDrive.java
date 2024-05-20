@@ -11,6 +11,12 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.SwerveDriveConstants;
@@ -33,6 +39,11 @@ public class SwerveDrive extends SubsystemBase {
 
   private VisionSystem vision;
 
+  private Field2d field;
+
+  StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+    .getStructTopic("MyPose", Pose2d.struct).publish();
+
   public static SwerveDrive create() {
     if (Robot.isReal()) {
       return new SwerveDrive(
@@ -44,10 +55,10 @@ public class SwerveDrive extends SubsystemBase {
     } if (Robot.isSimulation()) {
       return new SwerveDrive(
         new NoGyro(),
-        new SimModuleIO(),
-        new SimModuleIO(),
-        new SimModuleIO(),
-        new SimModuleIO()
+        new SimModuleIO("Front Right", 6, 7, 9, 8),
+        new SimModuleIO("Front Left", 4, 5, 11, 10),
+        new SimModuleIO("Back Right", 2, 3, 13, 12),
+        new SimModuleIO("Back Left", 0, 1, 15, 14)
       );
     } else {
       return new SwerveDrive(
@@ -67,6 +78,8 @@ public class SwerveDrive extends SubsystemBase {
     this.backRight = new SwerveModule(backRight, "Back Right");
     this.backLeft = new SwerveModule(backLeft, "Back Left");
 
+    DataLogManager.log("[Swerve] Initializing");
+
     poseEstimator =
     new SwerveDrivePoseEstimator(
         kinematics,
@@ -75,6 +88,8 @@ public class SwerveDrive extends SubsystemBase {
         new Pose2d(0.0, 0.0, getHeading()));
 
     vision = new VisionSystem();
+
+    field = new Field2d();
   }
 
   public void drive(
@@ -160,5 +175,23 @@ public class SwerveDrive extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    posePublisher.set(getPose());
+
+    SmartDashboard.putData("Field", field);
+
+    updateOdometry();
+    field.setRobotPose(getPose());
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    frontRight.periodic();
+    frontLeft.periodic();
+    backRight.periodic();
+    backLeft.periodic();
+
+    if (DriverStation.isDisabled()) {
+      setChassisSpeeds(new ChassisSpeeds(), false);
+    }
   }
 }

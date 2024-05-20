@@ -121,11 +121,6 @@ public class KrakenModuleIO implements ModuleIO {
     setAngle(desiredState);
   }
 
-  @Override
-  public void setDriveVoltage(double voltage) {
-    driveMotor.setVoltage(voltage);
-  }
-
   public void periodic() {
   }
 }

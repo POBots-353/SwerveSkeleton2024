@@ -19,8 +19,6 @@ public interface ModuleIO {
 
   public SwerveModulePosition simModulePosition = new SwerveModulePosition();
   public double simDistance = 0.0;
-
-  void setDriveVoltage(double volts);
  
   SwerveModulePosition getModulePosition();
 
