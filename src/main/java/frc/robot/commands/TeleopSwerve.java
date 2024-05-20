@@ -50,6 +50,7 @@ public class TeleopSwerve extends Command {
     this.strafeSupplier = strafeSupplier;
     this.angleX = angleX;
     this.angleY = angleY;
+    this.turnToAngle = turnToAngle;
     this.maxSpeed = maxSpeed;
     this.maxAngularSpeed = maxAngularSpeed;
 

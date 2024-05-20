@@ -14,7 +14,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -32,6 +31,7 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule backLeft;
 
   private final SwerveDrivePoseEstimator poseEstimator;
+
   private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(SwerveDriveConstants.wheelLocations);
 
@@ -172,6 +172,10 @@ public class SwerveDrive extends SubsystemBase {
     addVisionToPoseEstimate();
   }
 
+  public void resetOdometry(Rotation2d pose, SwerveModulePosition[] states, Pose2d drivePose) {
+    poseEstimator.resetPosition(pose, states, drivePose);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -190,8 +194,18 @@ public class SwerveDrive extends SubsystemBase {
     backRight.periodic();
     backLeft.periodic();
 
-    if (DriverStation.isDisabled()) {
-      setChassisSpeeds(new ChassisSpeeds(), false);
-    }
+    field.setRobotPose(getPose());
+    field.getObject("Swerve Modules").setPoses(getPose());
+
+    SwerveModuleState[] moduleStates = {
+      frontLeft.getModuleState(),
+      frontRight.getModuleState(),
+      backLeft.getModuleState(),
+      backRight.getModuleState()
+    };
+
+    var chassisSpeed = kinematics.toChassisSpeeds(moduleStates);
+
+    SmartDashboard.putData("Field", field);
   }
 }

@@ -17,6 +17,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
@@ -31,11 +32,14 @@ public class KrakenModuleIO implements ModuleIO {
 
   private DutyCycleOut driveDutyCycle;
 
+  String moduleName;
+
   private SwerveModuleState previousState = new SwerveModuleState();
 
   private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(SwerveModuleConstants.kS, SwerveModuleConstants.kV, SwerveModuleConstants.kA);
 
   public KrakenModuleIO(int driveMotorID, int turnMotorID, int canCoderID, String moduleName) {
+    this.moduleName = moduleName;
 
     driveMotor = new TalonFX(driveMotorID);
     turnMotor = new TalonFX(turnMotorID);
@@ -121,6 +125,13 @@ public class KrakenModuleIO implements ModuleIO {
     setAngle(desiredState);
   }
 
+  @Override
   public void periodic() {
+    String telemetryKey = "Swerve/" + moduleName + "/";
+
+    SmartDashboard.putNumber(telemetryKey + "Position", getModulePosition().distanceMeters);
+
+    SmartDashboard.putNumber(telemetryKey + "Velocity", getModuleState().speedMetersPerSecond);
+    SmartDashboard.putNumber(telemetryKey + "Angle", getAngle().getDegrees());
   }
 }

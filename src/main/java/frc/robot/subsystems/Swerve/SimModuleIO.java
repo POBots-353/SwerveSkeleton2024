@@ -124,6 +124,7 @@ public class SimModuleIO implements ModuleIO{
     SmartDashboard.putNumber(name + " - Distance Travelled", getModulePosition().distanceMeters);
   }
 
+  @Override
   public void periodic() {
     moduleThrottleSimModel.setInputVoltage(driveOutput / SwerveDriveConstants.maxSpeed * RobotController.getBatteryVoltage());
     moduleRotationSimModel.setInputVoltage(turnOutput / SwerveDriveConstants.maxAngularSpeed * RobotController.getBatteryVoltage());

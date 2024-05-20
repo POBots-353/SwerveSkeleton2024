@@ -31,4 +31,6 @@ public interface ModuleIO {
   void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop);
 
   void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop);
+
+  void periodic();
 }

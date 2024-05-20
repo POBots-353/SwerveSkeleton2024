@@ -35,4 +35,7 @@ public class NoModule implements ModuleIO {
 
   @Override
   public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {}
+
+  @Override
+  public void periodic() {}
 }
