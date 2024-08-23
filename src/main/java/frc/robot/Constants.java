@@ -63,6 +63,12 @@ public final class Constants {
 
   public static class SwerveModuleConstants {
     public static final double WHEEL_CIRCUMFERENCE = 2;
+    public static final double WHEEL_RADIUS = WHEEL_CIRCUMFERENCE/(2*3.141592);
+
+    public static final double GEAR_RATIO = 1/10; // THIS IS A DUMMY VARIABLE; WILL BE CHANGED WHEN MORE INFO COMES OUT
+
+    public static final int talonFXCPR = 2048;
+    public static final double degreesPerCount = 360.0 / talonFXCPR;
 
     // Values referenced from 2024 POBOTS Code; will be changed during testing
     public static final double kV = 2.4829;

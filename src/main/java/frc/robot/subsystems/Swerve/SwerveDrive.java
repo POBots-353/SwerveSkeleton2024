@@ -13,11 +13,9 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 import frc.robot.subsystems.VisionSystem;
@@ -25,17 +23,40 @@ import frc.robot.subsystems.VisionSystem;
 public class SwerveDrive extends SubsystemBase {
   /** Creates a new SweveDrive. */
 
-  private final SwerveModule frontRight;
-  private final SwerveModule frontLeft;
-  private final SwerveModule backRight;
-  private final SwerveModule backLeft;
+  private final SwerveModule frontLeft = new SwerveModule(SwerveModuleConstants.FLDriveMotorID, 
+                                                          SwerveModuleConstants.FLTurnMotorID, 
+                                                          SwerveModuleConstants.FLCanCoderID, 
+                                                          "Front Left Module", 
+                                                          1, 2, 
+                                                          3, 4);
+  
+  private final SwerveModule frontRight = new SwerveModule(SwerveModuleConstants.FRDriveMotorID, 
+                                                          SwerveModuleConstants.FRTurnMotorID, 
+                                                          SwerveModuleConstants.FRCanCoderID, 
+                                                          "Front Right Module", 
+                                                          5, 6, 
+                                                          7, 8);
+
+  private final SwerveModule backLeft = new SwerveModule(SwerveModuleConstants.BLDriveMotorID, 
+                                                          SwerveModuleConstants.BLTurnMotorID, 
+                                                          SwerveModuleConstants.BLCanCoderID, 
+                                                          "Back Left Module", 
+                                                          9, 10, 
+                                                          11, 12);
+
+  private final SwerveModule backRight = new SwerveModule(SwerveModuleConstants.BRDriveMotorID, 
+                                                          SwerveModuleConstants.BRTurnMotorID, 
+                                                          SwerveModuleConstants.BRCanCoderID, 
+                                                          "Back Right Module", 
+                                                          13, 14, 
+                                                          15, 16);
 
   private final SwerveDrivePoseEstimator poseEstimator;
 
   private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(SwerveDriveConstants.wheelLocations);
 
-  private GyroIO gyro;
+  private Gyro gyro;
 
   private VisionSystem vision;
 
@@ -44,42 +65,9 @@ public class SwerveDrive extends SubsystemBase {
   StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
     .getStructTopic("MyPose", Pose2d.struct).publish();
 
-  public static SwerveDrive create() {
-    if (Robot.isReal()) {
-      return new SwerveDrive(
-        new Pigeon2IO(), 
-        new KrakenModuleIO(SwerveModuleConstants.FRDriveMotorID, SwerveModuleConstants.FRTurnMotorID, SwerveModuleConstants.FRCanCoderID, "Front Right"), 
-        new KrakenModuleIO(SwerveModuleConstants.FLDriveMotorID, SwerveModuleConstants.FLTurnMotorID, SwerveModuleConstants.FLCanCoderID, "Front Left"), 
-        new KrakenModuleIO(SwerveModuleConstants.BRDriveMotorID, SwerveModuleConstants.BRTurnMotorID, SwerveModuleConstants.BRCanCoderID, "Back Right"), 
-        new KrakenModuleIO(SwerveModuleConstants.BLDriveMotorID, SwerveModuleConstants.BLTurnMotorID, SwerveModuleConstants.BLCanCoderID, "Back Left"));
-    } if (Robot.isSimulation()) {
-      return new SwerveDrive(
-        new NoGyro(),
-        new SimModuleIO("Front Right", 6, 7, 9, 8),
-        new SimModuleIO("Front Left", 4, 5, 11, 10),
-        new SimModuleIO("Back Right", 2, 3, 13, 12),
-        new SimModuleIO("Back Left", 0, 1, 15, 14)
-      );
-    } else {
-      return new SwerveDrive(
-        new NoGyro(),
-        new NoModule(),
-        new NoModule(),
-        new NoModule(),
-        new NoModule()
-      );
-    }
-  }
+
   
-  public SwerveDrive(GyroIO gyro, ModuleIO frontRight, ModuleIO frontLeft, ModuleIO backRight, ModuleIO backLeft) {
-    this.gyro = gyro;
-    this.frontRight = new SwerveModule(frontRight, "Front Right");
-    this.frontLeft = new SwerveModule(frontLeft, "Front Left");
-    this.backRight = new SwerveModule(backRight, "Back Right");
-    this.backLeft = new SwerveModule(backLeft, "Back Left");
-
-    DataLogManager.log("[Swerve] Initializing");
-
+  public SwerveDrive() {
     poseEstimator =
     new SwerveDrivePoseEstimator(
         kinematics,
@@ -108,10 +96,10 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public void setModuleStates(SwerveModuleState[] states, boolean isOpenLoop) {
-    frontLeft.setState(states[0], isOpenLoop);
-    frontRight.setState(states[1], isOpenLoop);
-    backLeft.setState(states[2], isOpenLoop);
-    backRight.setState(states[3], isOpenLoop);
+    frontLeft.setDesiredState(states[0], isOpenLoop);
+    frontRight.setDesiredState(states[1], isOpenLoop);
+    backLeft.setDesiredState(states[2], isOpenLoop);
+    backRight.setDesiredState(states[3], isOpenLoop);
   }
 
   public void lockModules() {
@@ -203,8 +191,6 @@ public class SwerveDrive extends SubsystemBase {
       backLeft.getModuleState(),
       backRight.getModuleState()
     };
-
-    var chassisSpeed = kinematics.toChassisSpeeds(moduleStates);
 
     SmartDashboard.putData("Field", field);
   }
