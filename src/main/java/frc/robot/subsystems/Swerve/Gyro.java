@@ -12,16 +12,17 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Pigeon2IO implements GyroIO {
+public class Gyro extends SubsystemBase {
   /** Creates a new Pigeon2IO. */
   Pigeon2 pigeon;
   StatusSignal<Double> yaw;
   private final StatusSignal<Double> yawVelocity;
   StatusSignal<Double>[] accelerationArray;
 
-  public Pigeon2IO() {
-    pigeon = new Pigeon2(1, "*");
+  public Gyro() {
+    pigeon = new Pigeon2(1);
     yaw = pigeon.getYaw();
     yawVelocity = pigeon.getAngularVelocityZWorld();
 
@@ -32,42 +33,34 @@ public class Pigeon2IO implements GyroIO {
     pigeon.optimizeBusUtilization();
   }
 
-  @Override
   public boolean isConnected() {
     return BaseStatusSignal.refreshAll(yaw, yawVelocity).isOK();
   }
 
-  @Override
   public Rotation2d yawValue() {
     return Rotation2d.fromDegrees(yaw.getValueAsDouble());
   }
 
-  @Override
   public double yawVelocityValue() {
     return Units.degreesToRadians(yawVelocity.getValueAsDouble());
   }
 
-  @Override
   public StatusSignal<Double> getAccelerationX() {
     return pigeon.getAccelerationX();
   }
 
-  @Override
   public StatusSignal<Double> getAccelerationY() {
     return pigeon.getAccelerationY();
   }
 
-  @Override
   public StatusSignal<Double> getAccelerationZ() {
     return pigeon.getAccelerationZ();
   }
 
-  @Override
   public Rotation3d getHeading3d() {
     return pigeon.getRotation3d();
   }
 
-  @Override
   public Rotation2d getRotation() {
     return pigeon.getRotation2d();
   }
