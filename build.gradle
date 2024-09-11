@@ -49,6 +49,7 @@ def includeDesktopSupport = false
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
+
 dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
@@ -69,7 +70,10 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation(files("/libs/Jama-1.0.3.jar"))
+
+    implementation files('libs/Jama-1.0.3.jar') // THIS IS HOW YOU ADD A JAR FILE
+
+    // compile fileTree(dir: 'libs', include: ['Jama-1.0.3.jar'])
 }
 
 test {

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.Swerve;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
+
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,6 +18,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.GyroConstants;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 import frc.robot.subsystems.VisionSystem;
@@ -56,7 +59,7 @@ public class SwerveDrive extends SubsystemBase {
   private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(SwerveDriveConstants.wheelLocations);
 
-  private Gyro gyro;
+  private Pigeon2 pigeon = new Pigeon2(GyroConstants.gyroID);
 
   private VisionSystem vision;
 
@@ -140,11 +143,12 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public Rotation2d getYaw() {
-    return gyro.yawValue();
+    double yaw = pigeon.getYaw().getValueAsDouble();
+    return Rotation2d.fromDegrees(yaw);
   }
 
   public Rotation2d getHeading() {
-    return gyro.getRotation();
+    return pigeon.getRotation2d();
   }
 
   public void addVisionToPoseEstimate() {
