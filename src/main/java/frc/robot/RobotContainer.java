@@ -8,7 +8,6 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.TeleopSwerve;
-import frc.robot.subsystems.Simulation.FieldSim;
 import frc.robot.subsystems.Swerve.SwerveDrive;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,13 +28,11 @@ public class RobotContainer {
   private final XboxController driverControllerHID = driverController.getHID();
   
   private final SwerveDrive drive;
-  private final FieldSim field;
   private final ExampleCommand exampleCommand = new ExampleCommand();
   
   public RobotContainer() {
     drive = new SwerveDrive();
 
-    field = new FieldSim(drive);
 
     drive.setDefaultCommand(
         new TeleopSwerve(driverController::getLeftY, driverController::getLeftX,
@@ -66,10 +63,8 @@ public class RobotContainer {
     }
   }
   public void simulationInit() {
-    field.initSim();
   }
 
   public void simulationPeriodic() {
-    field.simulationPeriodic();
   }
 }
