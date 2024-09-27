@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,9 +21,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -46,6 +44,15 @@ public class SwerveModule extends SubsystemBase {
 
   private DutyCycleOut driveDutyCycle;
 
+  private double driveSetpointMPS = 0.0;
+  private double driveAppliedVolts = 0.0;
+  private double driveDistanceMeters = 0.0;
+  private double angleSetpointDeg = 0.0;
+  private double turnAppliedVolts = 0.0;
+
+  private double turnRelativePositionRad = 0.0;
+  private double turnAbsolutePositionRad = Math.random() * 2.0 * Math.PI;
+
   private SwerveModuleState previousState = new SwerveModuleState();
 
   private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(SwerveModuleConstants.kS, 
@@ -66,26 +73,11 @@ public class SwerveModule extends SubsystemBase {
           DCMotor.getKrakenX60Foc(1),
           8.16
   );
-
-  private Encoder simulationTurnEncoder;
-  private Encoder simulationThrottleEncoder;
-  private EncoderSim simulationTurnEncoderSim;
-  private EncoderSim simulationThrottleEncoderSim;
-
-  private double simTurnEncoderDistance;
-  private double simThrottleEncoderDistance;
-
-  private double driveOutput;
-  private double turnOutput;
   
   public SwerveModule(int driveMotorID, 
                       int turnMotorID, 
                       int canCoderID, 
-                      String moduleName,
-                      int simThrottleChannelA,
-                      int simThrottleChannelB,
-                      int simTurnChannelA,
-                      int simTurnChannelB) {
+                      String moduleName) {
 
     this.moduleName = moduleName;
 
@@ -94,12 +86,6 @@ public class SwerveModule extends SubsystemBase {
     cancoder = new CANcoder(canCoderID);
 
     talonConfig();
-
-    simulationThrottleEncoder = new Encoder(simThrottleChannelA, simThrottleChannelB);
-    simulationTurnEncoder = new Encoder(simTurnChannelA, simTurnChannelB);
-
-    simulationThrottleEncoderSim = new EncoderSim(simulationThrottleEncoder);
-    simulationTurnEncoderSim = new EncoderSim(simulationTurnEncoder);
   }
 
   public void talonConfig() {
@@ -134,11 +120,7 @@ public class SwerveModule extends SubsystemBase {
       anglePosition.FeedForward = feedforward.calculate(desiredState.angle.getRotations());
       turnMotor.setControl(anglePosition);
     } else {
-      Rotation2d desiredAngle = desiredState.angle;
-
-      turnOutput = turnController.calculate(simulationTurnEncoder.getDistance(), desiredAngle.getRadians());
-      double turnFeedForward = feedforward.calculate(turnController.getSetpoint());
-      turnOutput = turnOutput + turnFeedForward;
+      angleSetpointDeg = desiredState.angle.getDegrees();
     }
   }
 
@@ -150,21 +132,16 @@ public class SwerveModule extends SubsystemBase {
       if (isOpenLoop) {
         driveDutyCycle.Output = desiredSpeed / SwerveDriveConstants.maxSpeed;
         driveMotor.setControl(driveDutyCycle);
-      } else {
-      desiredVelocity.Velocity = Conversions.MPStoRPS(desiredSpeed);
-      desiredVelocity.FeedForward = feedforward.calculate(desiredSpeed, (desiredSpeed - previousState.speedMetersPerSecond) / 0.02);
-      driveMotor.setControl(desiredVelocity); 
+      } 
+      else {
+        desiredVelocity.Velocity = Conversions.MPStoRPS(desiredSpeed);
+        desiredVelocity.FeedForward = feedforward.calculate(desiredSpeed, (desiredSpeed - previousState.speedMetersPerSecond) / 0.02);
+        driveMotor.setControl(desiredVelocity); 
       }
     } 
     
     else {
-      double desiredVelocity = desiredState.speedMetersPerSecond;
-      driveOutput = driveController.calculate(getVelocity(), desiredVelocity);
-      double driveFeedForward = feedforward.calculate(desiredVelocity);
-
-      driveOutput = driveOutput + driveFeedForward;
-
-      moduleThrottleSimModel.setInputVoltage(driveOutput / SwerveDriveConstants.maxSpeed * RobotController.getBatteryVoltage());
+      driveSetpointMPS = desiredState.speedMetersPerSecond;
     }
 
   }
@@ -179,7 +156,11 @@ public class SwerveModule extends SubsystemBase {
     if (Robot.isReal()) {
       return new SwerveModulePosition(Conversions.MechanismRotationsToMeters(driveMotor.getPosition().getValueAsDouble()), getAngle());
     } else {
-      return new SwerveModulePosition(getVelocity(), getAngle());
+      driveDistanceMeters = driveDistanceMeters + (moduleThrottleSimModel.getAngularVelocityRadPerSec() * 
+                                                   SwerveModuleConstants.LOOP_PERIOD_SECS * 
+                                                   (SwerveModuleConstants.WHEEL_CIRCUMFERENCE / (2.0 * Math.PI)));
+
+      return new SwerveModulePosition(driveDistanceMeters, getAngle());
     }
   }
 
@@ -191,49 +172,87 @@ public class SwerveModule extends SubsystemBase {
     if (Robot.isReal()) {
       return Conversions.RPStoMPS(driveMotor.getVelocity().getValueAsDouble());
     } else {
-      return simulationThrottleEncoder.getRate();
+      return moduleThrottleSimModel.getAngularVelocityRadPerSec() * (SwerveModuleConstants.WHEEL_CIRCUMFERENCE / (2.0 * Math.PI));
     }
   }
 
   public Rotation2d getAngle() {
+    return Rotation2d.fromDegrees(getAngleInRadians());
+  }
+
+  public double getAngleInRadians() {
     if (Robot.isReal()) {
-      return Rotation2d.fromDegrees(Conversions.MechanismRotationsToDegrees(turnMotor.getPosition().getValueAsDouble()));
+      return Conversions.MechanismRotationsToDegrees(turnMotor.getPosition().getValueAsDouble());
     } else {
-      return Rotation2d.fromRadians(simulationTurnEncoder.getDistance());
+      double angleDiffRad = moduleRotationSimModel.getAngularVelocityRadPerSec() * SwerveModuleConstants.LOOP_PERIOD_SECS;
+
+      turnRelativePositionRad += angleDiffRad;
+      turnAbsolutePositionRad += angleDiffRad;
+
+      return turnRelativePositionRad;
     }
   }
 
   public Rotation2d getAbsoluteAngle() {
-    return Rotation2d.fromDegrees(cancoder.getAbsolutePosition().getValueAsDouble());
-  }
+    if (Robot.isReal()) {
+      return Rotation2d.fromDegrees(cancoder.getAbsolutePosition().getValueAsDouble());
+    } else {
+      double angleDiffRad = moduleRotationSimModel.getAngularVelocityRadPerSec() * SwerveModuleConstants.LOOP_PERIOD_SECS;
 
-  public double simGetPosition() {
-    return simulationThrottleEncoder.getDistance();
+      turnRelativePositionRad += angleDiffRad;
+      turnAbsolutePositionRad += angleDiffRad;
+
+      return Rotation2d.fromRadians(turnAbsolutePositionRad);
+    }
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    String telemetryKey = "Swerve/" + moduleName + "/";
+    if (Robot.isReal()) {
+      String telemetryKey = "Swerve/" + moduleName + "/";
 
-    SmartDashboard.putNumber(telemetryKey + "Position", getModulePosition().distanceMeters);
+      SmartDashboard.putNumber(telemetryKey + "Position", getModulePosition().distanceMeters);
 
-    SmartDashboard.putNumber(telemetryKey + "Velocity", getModuleState().speedMetersPerSecond);
-    SmartDashboard.putNumber(telemetryKey + "Angle", getAngle().getDegrees());
+      SmartDashboard.putNumber(telemetryKey + "Velocity", getModuleState().speedMetersPerSecond);
+      SmartDashboard.putNumber(telemetryKey + "Angle", getAngle().getDegrees());
+    }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          SIMULATION PERIODIC                                                     //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    moduleThrottleSimModel.setInputVoltage(driveOutput / SwerveDriveConstants.maxSpeed * RobotController.getBatteryVoltage());
-    moduleRotationSimModel.setInputVoltage(turnOutput / SwerveDriveConstants.maxAngularSpeed * RobotController.getBatteryVoltage());
+    else {
+      // SETTING THE VELOCITY IN SIMULATION
 
-    moduleRotationSimModel.update(0.02);
-    moduleThrottleSimModel.update(0.02);
+      double velocityRadPerSec = driveSetpointMPS * (2.0 * Math.PI) / (SwerveModuleConstants.WHEEL_CIRCUMFERENCE);
+      driveAppliedVolts =
+          feedforward.calculate(velocityRadPerSec)
+              + driveController.calculate(getVelocity(), velocityRadPerSec);
+      driveAppliedVolts = MathUtil.clamp(driveAppliedVolts, -12.0, 12.0);
+      moduleThrottleSimModel.setInputVoltage(driveAppliedVolts);
 
-    simTurnEncoderDistance += moduleRotationSimModel.getAngularVelocityRadPerSec() * 0.02;
-    simulationTurnEncoderSim.setDistance(simTurnEncoderDistance);
-    simulationTurnEncoderSim.setRate(moduleRotationSimModel.getAngularVelocityRadPerSec());
+      // SETTING THE TURN ANGLE IN SIMULATION
 
-    simThrottleEncoderDistance += moduleThrottleSimModel.getAngularVelocityRadPerSec() * 0.02;
-    simulationThrottleEncoderSim.setDistance(simThrottleEncoderDistance);
-    simulationThrottleEncoderSim.setRate(moduleThrottleSimModel.getAngularVelocityRadPerSec());
+      turnAppliedVolts =
+          turnController.calculate(getAngleInRadians(), angleSetpointDeg * (Math.PI / 180.0));
+      turnAppliedVolts = MathUtil.clamp(turnAppliedVolts, -12.0, 12.0);
+      moduleRotationSimModel.setInputVoltage(turnAppliedVolts);
+
+      //   moduleThrottleSimModel.setInputVoltage(driveOutput / SwerveDriveConstants.maxSpeed * RobotController.getBatteryVoltage());
+      //   moduleRotationSimModel.setInputVoltage(turnOutput / SwerveDriveConstants.maxAngularSpeed * RobotController.getBatteryVoltage());
+
+      //   moduleRotationSimModel.update(0.02);
+      //   moduleThrottleSimModel.update(0.02);
+
+      //   simTurnEncoderDistance += moduleRotationSimModel.getAngularVelocityRadPerSec() * 0.02;
+      //   simulationTurnEncoderSim.setDistance(simTurnEncoderDistance);
+      //   simulationTurnEncoderSim.setRate(moduleRotationSimModel.getAngularVelocityRadPerSec());
+
+      //   simThrottleEncoderDistance += moduleThrottleSimModel.getAngularVelocityRadPerSec() * 0.02;
+      //   simulationThrottleEncoderSim.setDistance(simThrottleEncoderDistance);
+      //   simulationThrottleEncoderSim.setRate(moduleThrottleSimModel.getAngularVelocityRadPerSec());
+      // }
+    }
+    }
   }
-}
