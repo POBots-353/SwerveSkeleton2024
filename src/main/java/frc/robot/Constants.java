@@ -52,6 +52,10 @@ public final class Constants {
     // Values referenced from 2024 POBOTS Code; will be changed during testing
     public static final double maxSpeed = Units.feetToMeters(8.5);
     public static final double maxAngularSpeed = Units.degreesToRadians(180);
+
+    // Values referenced from 2024 POBOTS Code; will be changed during testing
+    public static final double headingP = 0.55;
+    public static final double headingD = 0;
     
     // Values referenced from 2024 POBOTS Code; will be changed during testing
     public static final double maxTranslationalAcceleration = Units.feetToMeters(30.0);
@@ -99,6 +103,8 @@ public final class Constants {
     public static final int BRCanCoderID = 12;
 
     public static double maxCurrent;
+
+    public static final double LOOP_PERIOD_SECS = 0.02;
   }
 
   public static class VisionConstants {

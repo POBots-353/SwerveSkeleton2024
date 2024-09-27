@@ -29,30 +29,22 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule frontLeft = new SwerveModule(SwerveModuleConstants.FLDriveMotorID, 
                                                           SwerveModuleConstants.FLTurnMotorID, 
                                                           SwerveModuleConstants.FLCanCoderID, 
-                                                          "Front Left Module", 
-                                                          1, 2, 
-                                                          3, 4);
+                                                          "Front Left Module");
   
   private final SwerveModule frontRight = new SwerveModule(SwerveModuleConstants.FRDriveMotorID, 
                                                           SwerveModuleConstants.FRTurnMotorID, 
                                                           SwerveModuleConstants.FRCanCoderID, 
-                                                          "Front Right Module", 
-                                                          5, 6, 
-                                                          7, 8);
+                                                          "Front Right Module");
 
   private final SwerveModule backLeft = new SwerveModule(SwerveModuleConstants.BLDriveMotorID, 
                                                           SwerveModuleConstants.BLTurnMotorID, 
                                                           SwerveModuleConstants.BLCanCoderID, 
-                                                          "Back Left Module", 
-                                                          9, 10, 
-                                                          11, 12);
+                                                          "Back Left Module");
 
   private final SwerveModule backRight = new SwerveModule(SwerveModuleConstants.BRDriveMotorID, 
                                                           SwerveModuleConstants.BRTurnMotorID, 
                                                           SwerveModuleConstants.BRCanCoderID, 
-                                                          "Back Right Module", 
-                                                          13, 14, 
-                                                          15, 16);
+                                                          "Back Right Module");
 
   private final SwerveDrivePoseEstimator poseEstimator;
 
